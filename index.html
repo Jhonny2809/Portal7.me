@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal Sete - Premium Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#0B1C2E',
+              accent: '#D4AF37',
+              'accent-dark': '#B5952F',
+              secondary: '#F8FAFC',
+              surface: '#FFFFFF',
+              'dark-surface': '#112235',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              display: ['Lexend', 'sans-serif'],
+            },
+            borderRadius: {
+              '3xl': '1.5rem',
+              '4xl': '2.5rem',
+              '5xl': '3.5rem',
+            },
+            keyframes: {
+              'fade-in-up': {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              'shimmer': {
+                '100%': { transform: 'translateX(100%)' },
+              }
+            },
+            animation: {
+              'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+              'shimmer': 'shimmer 2s infinite',
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Lexend:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: 'Inter', sans-serif; background-color: #F8F9FB; color: #0B1C2E; }
+      h1, h2, h3, .font-display { font-family: 'Lexend', sans-serif; }
+      .gold-gradient {
+        background: linear-gradient(135deg, #D4AF37 0%, #F8E4A0 50%, #B5952F 100%);
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .premium-border {
+        border: 1px solid rgba(212, 175, 55, 0.2);
+      }
+      #initial-loader {
+        position: fixed; inset: 0; background: #0B1C2E;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 9999;
+      }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0",
+        "react-dom": "https://esm.sh/react-dom@19.0.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.48.1",
+        "react-router-dom": "https://esm.sh/react-router-dom@7.1.5?external=react,react-dom",
+        "lucide-react": "https://esm.sh/lucide-react@0.474.0?external=react,react-dom",
+        "react-facebook-pixel": "https://esm.sh/react-facebook-pixel@1.0.4?external=react,react-dom",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/"
+      }
+    }
+    </script>
+  </head>
+  <body class="antialiased overflow-x-hidden">
+    <div id="initial-loader">
+      <div class="flex flex-col items-center gap-6">
+        <div class="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin"></div>
+        <div class="text-accent font-black uppercase tracking-[0.3em] text-[10px]">Portal Sete Premium</div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script>
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.remove(), 500);
+        }
+      });
+    </script>
+  </body>
+</html>

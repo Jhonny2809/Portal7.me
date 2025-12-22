@@ -1,0 +1,7 @@
+{
+  "name": "Portal7.me",
+  "description": "Premium digital product marketplace with Supabase and Mercado Pago integration.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
