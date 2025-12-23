@@ -100,21 +100,28 @@ const Admin: React.FC = () => {
   };
 
   const handleSaveSection = async () => {
+    if (!editingSection?.type) return;
     setLoading(true);
     try {
       if (editingSection?.id) {
         const { id, ...updateData } = editingSection as any;
         delete updateData.created_at;
-        await supabase.from('sections').update(updateData).eq('id', id);
+        const { error } = await supabase.from('sections').update(updateData).eq('id', id);
+        if (error) throw error;
       } else {
         const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.display_order)) : 0;
-        await supabase.from('sections').insert([{ ...editingSection, display_order: maxOrder + 1 }]);
+        const { error } = await supabase.from('sections').insert([{ ...editingSection, display_order: maxOrder + 1 }]);
+        if (error) throw error;
       }
       setEditingSection(null);
       await fetchSections();
-      setMsg({ type: 'success', text: 'Layout atualizado!' });
-    } catch (e: any) { setMsg({ type: 'error', text: e.message }); }
-    finally { setLoading(false); }
+      await refreshConfig();
+      setMsg({ type: 'success', text: 'Layout sincronizado com sucesso!' });
+    } catch (e: any) { 
+      setMsg({ type: 'error', text: e.message }); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const handleSaveProduct = async () => {
@@ -149,7 +156,7 @@ const Admin: React.FC = () => {
         category: activeFileCategory
       });
       fetchProductFiles(editingProduct.id);
-      setMsg({ type: 'success', text: 'Arquivo de download adicionado!' });
+      setMsg({ type: 'success', text: 'Arquivo adicionado!' });
     } catch (err: any) { setMsg({ type: 'error', text: err.message }); }
     finally { setUploadingFile(false); }
   };
@@ -217,7 +224,7 @@ const Admin: React.FC = () => {
                    <div><label className={labelClass}>Aviso de Topo</label><input className={inputClass} value={settingsForm.top_banner_text} onChange={e => setSettingsForm({...settingsForm, top_banner_text: e.target.value})} placeholder="Ex: Use o cupom VIP7" /></div>
                    <div><label className={labelClass}>Título Principal (Hero)</label><input className={inputClass} value={settingsForm.hero_title} onChange={e => setSettingsForm({...settingsForm, hero_title: e.target.value})} /></div>
                    <div><label className={labelClass}>Subtítulo</label><textarea className={`${inputClass} h-32`} value={settingsForm.hero_subtitle} onChange={e => setSettingsForm({...settingsForm, hero_subtitle: e.target.value})} /></div>
-                   <button onClick={() => handleSaveSettings(['top_banner_text', 'hero_title', 'hero_subtitle'])} disabled={loading} className="w-full gold-gradient text-primary py-5 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3">
+                   <button onClick={() => handleSaveSettings(['top_banner_text', 'hero_title', 'hero_subtitle'])} disabled={loading} className="w-full bg-primary text-white py-5 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3">
                      {loading ? <Loader2 className="animate-spin"/> : 'Salvar Textos'}
                    </button>
                 </div>
@@ -245,33 +252,36 @@ const Admin: React.FC = () => {
                  <div className="flex justify-between items-center"><h3 className="text-2xl font-black uppercase italic">Configurar Seção</h3><button onClick={()=>setEditingSection(null)} className="p-3 bg-gray-50 rounded-full hover:bg-gray-100"><X/></button></div>
                  <div className="grid md:grid-cols-2 gap-10">
                     <div className="space-y-6">
-                       <div onClick={()=>productImgRef.current?.click()} className="aspect-video rounded-3xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer overflow-hidden relative shadow-inner group">
+                       <div onClick={()=>sectionImgRef.current?.click()} className="aspect-video rounded-3xl bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer overflow-hidden relative shadow-inner group">
                           {editingSection.image_url ? <img src={editingSection.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-all" /> : <div className="text-center text-gray-300 font-black uppercase text-[10px] tracking-widest"><Upload className="mx-auto mb-2"/><p>Imagem da Seção</p></div>}
                           {uploadingImage && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><Loader2 className="animate-spin text-primary"/></div>}
                        </div>
                        <div><label className={labelClass}>Tipo de Seção</label><select className={inputClass} value={editingSection.type} onChange={e => setEditingSection({...editingSection, type: e.target.value as any})}><option value="hero">Capa (Hero)</option><option value="products">Vitrine de Produtos</option><option value="content">Texto e Imagem</option></select></div>
                     </div>
                     <div className="space-y-6">
-                       <div><label className={labelClass}>Título da Seção</label><input className={inputClass} value={editingSection.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} /></div>
-                       <div><label className={labelClass}>Conteúdo/Descrição</label><textarea className={`${inputClass} h-32`} value={editingSection.content || ''} onChange={e => setEditingSection({...editingSection, content: e.target.value})} /></div>
+                       <div><label className={labelClass}>Rótulo / Sub-título (Ex: Seleção Especial)</label><input className={inputClass} placeholder="Digite o rótulo superior" value={editingSection.subtitle || ''} onChange={e => setEditingSection({...editingSection, subtitle: e.target.value})} /></div>
+                       <div><label className={labelClass}>Título Principal</label><input className={inputClass} placeholder="Digite o título da seção" value={editingSection.title || ''} onChange={e => setEditingSection({...editingSection, title: e.target.value})} /></div>
+                       <div><label className={labelClass}>Conteúdo / Texto de Apoio</label><textarea className={`${inputClass} h-32`} value={editingSection.content || ''} onChange={e => setEditingSection({...editingSection, content: e.target.value})} /></div>
                        {editingSection.type === 'products' && (<div><label className={labelClass}>Filtrar por Tag</label><input className={inputClass} placeholder="Ex: curso-vip" value={editingSection.filter_tag || ''} onChange={e => setEditingSection({...editingSection, filter_tag: e.target.value})} /></div>)}
                        <div className="flex items-center gap-4"><button onClick={()=>setEditingSection({...editingSection, is_visible: !editingSection.is_visible})} className={`flex-1 py-4 rounded-2xl text-[10px] font-black uppercase border transition-all ${editingSection.is_visible ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>{editingSection.is_visible ? 'Publicada' : 'Oculta'}</button></div>
-                       <button onClick={handleSaveSection} className="w-full gold-gradient text-primary py-5 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl">Salvar Seção</button>
+                       <button onClick={handleSaveSection} disabled={loading} className="w-full bg-primary text-white py-5 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex justify-center items-center gap-2">
+                         {loading ? <Loader2 className="animate-spin" /> : 'Sincronizar Layout'}
+                       </button>
                     </div>
                  </div>
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="flex justify-between items-end"><h2 className="text-3xl font-black uppercase italic tracking-tighter">Estrutura da Home</h2><button onClick={()=>setEditingSection({type:'products', is_visible:true})} className="bg-primary text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl hover:scale-105 transition-all">+ Nova Seção</button></div>
+                <div className="flex justify-between items-end"><h2 className="text-3xl font-black uppercase italic tracking-tighter">Estrutura da Home</h2><button onClick={()=>setEditingSection({type:'products', is_visible:true, title: '', subtitle: ''})} className="bg-primary text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl hover:scale-105 transition-all">+ Nova Seção</button></div>
                 <div className="grid gap-4">{sections.map(s => (
                   <div key={s.id} className="bg-white p-6 rounded-3xl border border-gray-100 flex items-center justify-between hover:shadow-xl transition-all group">
                      <div className="flex items-center gap-6">
                         <div className={`p-4 rounded-2xl ${s.is_visible ? 'bg-primary/5 text-primary' : 'bg-gray-100 text-gray-300'}`}><LayoutIcon size={20}/></div>
-                        <div><h4 className="font-bold text-primary italic uppercase tracking-tight">{s.title || s.type.toUpperCase()}</h4><span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{s.type} • {s.is_visible ? 'Visível' : 'Oculto'}</span></div>
+                        <div><h4 className="font-bold text-primary italic uppercase tracking-tight">{s.title || 'Sem Título'}</h4><span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{s.type} • {s.is_visible ? 'Visível' : 'Oculto'}</span></div>
                      </div>
                      <div className="flex gap-2">
                         <button onClick={()=>setEditingSection(s)} className="p-3 bg-gray-50 rounded-xl hover:text-primary transition-all"><Edit3 size={18}/></button>
-                        <button onClick={async()=>{if(confirm('Excluir seção?')){await supabase.from('sections').delete().eq('id', s.id); fetchSections();}}} className="p-3 bg-gray-50 rounded-xl hover:text-red-500 transition-all"><Trash2 size={18}/></button>
+                        <button onClick={async()=>{if(confirm('Excluir seção?')){await supabase.from('sections').delete().eq('id', s.id); fetchSections(); refreshConfig();}}} className="p-3 bg-gray-50 rounded-xl hover:text-red-500 transition-all"><Trash2 size={18}/></button>
                      </div>
                   </div>
                 ))}</div>
@@ -312,7 +322,7 @@ const Admin: React.FC = () => {
                           </div>
                        </div>
                        <div><label className={labelClass}>Descrição Premium</label><textarea className={`${inputClass} h-32`} value={editingProduct.description || ''} onChange={e => setEditingProduct({...editingProduct, description: e.target.value})} /></div>
-                       <button onClick={handleSaveProduct} className="w-full gold-gradient text-primary py-5 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2 hover:brightness-105 transition-all">Sincronizar Catálogo</button>
+                       <button onClick={handleSaveProduct} className="w-full bg-primary text-white py-5 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-2 hover:brightness-105 transition-all">Sincronizar Catálogo</button>
                     </div>
                  </div>
 
@@ -361,7 +371,7 @@ const Admin: React.FC = () => {
           </div>
         )}
 
-        {/* ABA: FINANCEIRO (PAYMENTS) */}
+        {/* ABA: FINANCEIRO */}
         {activeTab === 'payments' && (
           <div className="max-w-3xl mx-auto space-y-10 animate-fade-in-up">
              <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-gray-100 space-y-10">
@@ -372,10 +382,7 @@ const Admin: React.FC = () => {
                 <div className="space-y-6">
                    <div><label className={labelClass}>Public Key (Frontend)</label><input className={inputClass} value={settingsForm.mercadopago_public_key} onChange={e => setSettingsForm({...settingsForm, mercadopago_public_key: e.target.value})} placeholder="APP_USR-..." /></div>
                    <div><label className={labelClass}>Access Token (Backend)</label><input type="password" className={inputClass} value={settingsForm.mercadopago_access_token} onChange={e => setSettingsForm({...settingsForm, mercadopago_access_token: e.target.value})} placeholder="••••••••••••••••••••" /></div>
-                   <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50 flex gap-4 text-blue-700">
-                      <Zap className="shrink-0" size={20}/><p className="text-[10px] font-bold uppercase leading-relaxed">As chaves de produção garantem que você receba os pagamentos instantaneamente.</p>
-                   </div>
-                   <button onClick={() => handleSaveSettings(['mercadopago_public_key', 'mercadopago_access_token'])} disabled={loading} className="w-full bg-[#009EE3] text-white py-6 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3 hover:brightness-110 active:scale-95 transition-all">
+                   <button onClick={() => handleSaveSettings(['mercadopago_public_key', 'mercadopago_access_token'])} disabled={loading} className="w-full bg-[#009EE3] text-white py-6 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3">
                      {loading ? <Loader2 className="animate-spin"/> : <><Save size={18}/> Salvar Chaves Financeiras</>}
                    </button>
                 </div>
@@ -383,18 +390,18 @@ const Admin: React.FC = () => {
           </div>
         )}
 
-        {/* ABA: MARKETING (PIXEL) */}
+        {/* ABA: MARKETING */}
         {activeTab === 'pixel' && (
           <div className="max-w-3xl mx-auto space-y-10 animate-fade-in-up">
              <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-gray-100 space-y-10">
                 <div className="flex items-center gap-5 border-b border-gray-50 pb-8">
                    <div className="bg-indigo-50 p-5 rounded-[2rem] text-indigo-600"><Target size={32} /></div>
-                   <div><h2 className="text-2xl font-black uppercase italic">Marketing & Track</h2><p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Pixel e API do Facebook</p></div>
+                   <div><h2 className="text-2xl font-black uppercase italic">Marketing & Rastreio</h2><p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">Pixel e API de Conversão</p></div>
                 </div>
                 <div className="space-y-6">
                    <div><label className={labelClass}>ID do Pixel (Facebook)</label><input className={inputClass} value={settingsForm.facebook_pixel_id} onChange={e => setSettingsForm({...settingsForm, facebook_pixel_id: e.target.value})} placeholder="Ex: 12345678910" /></div>
                    <div><label className={labelClass}>Conversion API Token</label><textarea className={`${inputClass} h-32`} value={settingsForm.facebook_pixel_token} onChange={e => setSettingsForm({...settingsForm, facebook_pixel_token: e.target.value})} placeholder="EAAB..." /></div>
-                   <button onClick={() => handleSaveSettings(['facebook_pixel_id', 'facebook_pixel_token'])} disabled={loading} className="w-full bg-primary text-white py-6 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3 hover:brightness-110 active:scale-95 transition-all">
+                   <button onClick={() => handleSaveSettings(['facebook_pixel_id', 'facebook_pixel_token'])} disabled={loading} className="w-full bg-primary text-white py-6 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl flex items-center justify-center gap-3">
                      {loading ? <Loader2 className="animate-spin"/> : <><Save size={18}/> Salvar Rastreamento</>}
                    </button>
                 </div>

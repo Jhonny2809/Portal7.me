@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -70,6 +71,7 @@ export interface SiteSection {
   type: 'hero' | 'products' | 'content' | 'about' | 'features' | 'banner';
   layout: 'content-left' | 'content-right' | 'centered';
   title: string;
+  subtitle?: string | null;
   content: string;
   image_url: string | null;
   is_visible: boolean;
