@@ -51,9 +51,10 @@ const Home: React.FC = () => {
              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] uppercase italic tracking-tighter">
                 {section.title || config?.hero_title || 'Portal Sete Premium'}
              </h1>
-             <p className="text-gray-400 text-lg md:text-xl font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed opacity-80">
-                {section.content || config?.hero_subtitle || 'A maior biblioteca de recursos digitais para profissionais que exigem excelência.'}
-             </p>
+             <div 
+               className="text-gray-400 text-lg md:text-xl font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed opacity-80 prose prose-invert"
+               dangerouslySetInnerHTML={{ __html: section.content || config?.hero_subtitle || '' }}
+             />
              <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start pt-4">
                 <button 
                   onClick={() => document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' })}
@@ -62,12 +63,8 @@ const Home: React.FC = () => {
                   Explorar Catálogo <ArrowRight size={20} />
                 </button>
              </div>
-             <div className="flex flex-wrap justify-center lg:justify-start gap-10 opacity-30 pt-4">
-                <div className="flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest"><ShieldCheck size={18}/> Checkout Seguro</div>
-                <div className="flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest"><Zap size={18}/> Acesso Vitalício</div>
-             </div>
           </div>
-          <div className="hidden lg:block animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="hidden lg:block animate-fade-in-up">
              <div className="relative aspect-square rounded-[5rem] overflow-hidden border-[12px] border-white/5 shadow-2xl p-1 bg-gradient-to-br from-white/10 to-transparent">
                 <img src={section.image_url || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&q=80'} className="w-full h-full object-cover rounded-[4.5rem]" alt="" />
              </div>
@@ -86,35 +83,27 @@ const Home: React.FC = () => {
 
     return (
       <section key={section.id} id={`section-${section.id}`} className="py-16 md:py-32 container mx-auto px-4 md:px-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-20 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-20 gap-6 text-left">
            <div className="max-w-2xl">
               <span className="text-accent font-black text-[10px] md:text-[11px] uppercase tracking-[0.4em] mb-3 block">
-                {section.subtitle || 'Seleção Especial'}
+                {section.subtitle}
               </span>
               <h2 className="text-3xl md:text-6xl font-black text-primary uppercase italic tracking-tighter leading-none">
-                {section.title || 'Novidades da Semana'}
+                {section.title}
               </h2>
            </div>
            <div className="hidden md:flex bg-white border border-gray-100 px-8 py-4 rounded-2xl shadow-xl items-center gap-4">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50"></div>
-              <span className="text-[11px] font-black uppercase text-gray-400 tracking-[0.2em]">{filteredProducts.length} Itens Disponíveis</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-[11px] font-black uppercase text-gray-400 tracking-[0.2em]">{filteredProducts.length} Itens</span>
            </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-10">
-          {productsLoading ? (
-            Array(4).fill(0).map((_, i) => (
-              <div key={i} className="aspect-[4/5] bg-white rounded-3xl animate-pulse overflow-hidden relative border border-gray-100">
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-50 to-transparent animate-shimmer"></div>
-              </div>
-            ))
-          ) : (
-            filteredProducts.map((p, idx) => (
-              <div key={p.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
-                <ProductCard product={p} />
-              </div>
-            ))
-          )}
+          {filteredProducts.map((p, idx) => (
+            <div key={p.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
+              <ProductCard product={p} />
+            </div>
+          ))}
         </div>
       </section>
     );
@@ -122,52 +111,39 @@ const Home: React.FC = () => {
 
   if (configLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-primary">
-      <div className="flex flex-col items-center gap-6">
-        <Loader2 className="animate-spin text-accent" size={50} strokeWidth={3} />
-        <span className="text-accent font-black uppercase text-xs tracking-[0.5em]">Portal Sete</span>
-      </div>
+      <Loader2 className="animate-spin text-accent" size={50} />
     </div>
   );
 
   return (
     <main id="catalog" className="bg-[#F8F9FB]">
-      {sections.length > 0 ? (
-        sections
-          .filter(s => s.is_visible)
-          .sort((a,b) => a.display_order - b.display_order)
-          .map(s => {
-            if (s.type === 'hero') return renderHero(s);
-            if (s.type === 'products') return renderProductSection(s);
-            if (s.type === 'content' || s.type === 'about') return (
-               <section key={s.id} id={`section-${s.id}`} className="py-20 md:py-32 container mx-auto px-6">
-                  <div className={`bg-white p-8 md:p-20 rounded-[3rem] shadow-2xl flex flex-col items-center gap-12 md:gap-20 ${s.layout === 'content-right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
-                     {s.image_url && (
-                       <div className="w-full md:w-1/2 aspect-square max-w-[500px] overflow-hidden rounded-[2.5rem] shadow-2xl">
-                         <img src={s.image_url} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt={s.title} />
-                       </div>
-                     )}
-                     <div className="flex-grow space-y-8">
-                        <div>
-                          <span className="text-accent font-black text-[10px] uppercase tracking-[0.4em] mb-3 block">{s.subtitle || 'Sobre o Portal'}</span>
-                          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-primary leading-tight">{s.title}</h2>
-                        </div>
-                        <p className="text-gray-500 font-medium leading-relaxed text-lg">{s.content}</p>
-                        <button className="bg-primary text-white px-10 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:scale-105 transition-all">Saber Mais</button>
-                     </div>
-                  </div>
-               </section>
-            );
-            return null;
-          })
-      ) : (
-        <div className="min-h-screen flex flex-col items-center justify-center p-20 text-center bg-primary">
-           <div className="bg-white/5 p-16 rounded-5xl border border-white/10 animate-fade-in-up">
-              <Rocket size={80} className="text-accent mb-8 mx-auto animate-bounce" strokeWidth={1.5} />
-              <h1 className="text-4xl font-black uppercase italic text-white tracking-tighter">Preparando Lançamento</h1>
-              <p className="text-gray-400 mt-4 max-w-sm mx-auto font-medium">O portal está sendo otimizado com novos recursos de elite.</p>
-           </div>
-        </div>
-      )}
+      {sections.filter(s => s.is_visible).sort((a,b) => a.display_order - b.display_order).map(s => {
+        if (s.type === 'hero') return renderHero(s);
+        if (s.type === 'products') return renderProductSection(s);
+        if (s.type === 'content' || s.type === 'about') return (
+           <section key={s.id} id={`section-${s.id}`} className="py-20 md:py-32 container mx-auto px-6">
+              <div className={`bg-white p-8 md:p-20 rounded-[3rem] shadow-2xl flex flex-col items-center gap-12 md:gap-20 ${s.layout === 'content-right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
+                 {s.image_url && (
+                   <div className="w-full md:w-1/2 aspect-square overflow-hidden rounded-[2.5rem] shadow-2xl flex-shrink-0">
+                     <img src={s.image_url} className="w-full h-full object-cover" alt={s.title} />
+                   </div>
+                 )}
+                 <div className="flex-grow space-y-8 text-left">
+                    <div>
+                      <span className="text-accent font-black text-[10px] uppercase tracking-[0.4em] mb-3 block">{s.subtitle}</span>
+                      <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-primary leading-tight">{s.title}</h2>
+                    </div>
+                    <div 
+                      className="text-gray-500 font-medium leading-relaxed text-lg prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: s.content }}
+                    />
+                    <button className="bg-primary text-white px-10 py-5 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl">Saber Mais</button>
+                 </div>
+              </div>
+           </section>
+        );
+        return null;
+      })}
     </main>
   );
 };

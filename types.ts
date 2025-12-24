@@ -12,6 +12,9 @@ export interface Product {
   download_label_main?: string;
   download_label_extras?: string;
   download_label_bonus?: string;
+  download_text_main?: string;
+  download_text_extras?: string;
+  download_text_bonus?: string;
 }
 
 export interface ProductFile {
